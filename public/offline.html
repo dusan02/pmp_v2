@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - PreMarketPrice</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .offline-container {
+            text-align: center;
+            max-width: 500px;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        .brand-dark {
+            color: #ffffff;
+        }
+        
+        .brand-gradient {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .offline-icon {
+            font-size: 4rem;
+            margin: 1rem 0;
+            opacity: 0.8;
+        }
+        
+        .offline-message {
+            margin: 2rem 0;
+            line-height: 1.6;
+        }
+        
+        .offline-message h2 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .offline-message p {
+            margin: 0.5rem 0;
+            opacity: 0.9;
+        }
+        
+        .retry-button {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin-top: 1rem;
+        }
+        
+        .retry-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .cached-data-info {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .cached-data-info h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .cached-data-info ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .cached-data-info li {
+            margin: 0.25rem 0;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 600px) {
+            .offline-container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .offline-icon {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="logo">
+            <span class="brand-dark">Pre</span>
+            <span class="brand-gradient">Market</span>
+            <span class="brand-dark">Price</span>
+        </div>
+        
+        <div class="offline-icon">📡</div>
+        
+        <div class="offline-message">
+            <h2>Ste offline</h2>
+            <p>Vaše internetové pripojenie nie je dostupné.</p>
+            <p>Skontrolujte svoje pripojenie a skúste to znova.</p>
+        </div>
+        
+        <button class="retry-button" onclick="window.location.reload()">
+            Skúsiť znova
+        </button>
+        
+        <div class="cached-data-info">
+            <h3>📊 Cachované dáta</h3>
+            <p>Nasledujúce dáta sú dostupné offline:</p>
+            <ul>
+                <li>✅ Základné informácie o akciách</li>
+                <li>✅ Vaše obľúbené akcie</li>
+                <li>✅ Profil používateľa</li>
+                <li>✅ Štatistiky trhu</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // Check connection status
+        function checkConnection() {
+            if (navigator.onLine) {
+                window.location.reload();
+            }
+        }
+        
+        // Listen for online event
+        window.addEventListener('online', checkConnection);
+        
+        // Check connection every 5 seconds
+        setInterval(checkConnection, 5000);
+        
+        // Add some interactivity
+        document.querySelector('.retry-button').addEventListener('click', function() {
+            this.textContent = 'Kontrolujem...';
+            this.disabled = true;
+            
+            setTimeout(() => {
+                this.textContent = 'Skúsiť znova';
+                this.disabled = false;
+            }, 2000);
+        });
+    </script>
+</body>
+</html> 

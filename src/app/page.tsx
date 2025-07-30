@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChevronUp, ChevronDown, Download, Table, User, LogOut } from 'lucide-react';
+import { ChevronUp, ChevronDown, Download, Table, User, LogOut, Clock, AlertCircle } from 'lucide-react';
 import { useSortableData } from '@/hooks/useSortableData';
 import { formatBillions } from '@/lib/format';
 // Remove cache import - it's server-side only
@@ -23,12 +23,78 @@ interface StockData {
 
 type SortKey = 'ticker' | 'marketCap' | 'preMarketPrice' | 'percentChange' | 'marketCapDiff';
 
+// Function to check if market is open
+const isMarketOpen = (): { isOpen: boolean; message: string; nextOpen: string } => {
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const est = new Date(utc + (3600000 * -5)); // EST is UTC-5
+  
+  const day = est.getDay();
+  const hour = est.getHours();
+  const minute = est.getMinutes();
+  const currentTime = hour * 100 + minute;
+  
+  // Market hours: 9:30 AM - 4:00 PM EST, Monday-Friday
+  const marketOpen = 930; // 9:30 AM
+  const marketClose = 1600; // 4:00 PM
+  
+  // Check if it's a weekday
+  if (day === 0 || day === 6) {
+    const nextMonday = new Date(est);
+    nextMonday.setDate(est.getDate() + (day === 0 ? 1 : 2));
+    nextMonday.setHours(9, 30, 0, 0);
+    return {
+      isOpen: false,
+      message: 'Market closed (Weekend)',
+      nextOpen: nextMonday.toLocaleString('en-US', { 
+        timeZone: 'America/New_York',
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    };
+  }
+  
+  // Check if market is open
+  if (currentTime >= marketOpen && currentTime < marketClose) {
+    return {
+      isOpen: true,
+      message: 'Market Open',
+      nextOpen: ''
+    };
+  }
+  
+  // Market is closed
+  const nextOpen = new Date(est);
+  if (currentTime >= marketClose) {
+    // After market close, next open is tomorrow
+    nextOpen.setDate(est.getDate() + 1);
+  }
+  nextOpen.setHours(9, 30, 0, 0);
+  
+  return {
+    isOpen: false,
+    message: 'Market Closed',
+    nextOpen: nextOpen.toLocaleString('en-US', { 
+      timeZone: 'America/New_York',
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  };
+};
+
 export default function HomePage() {
   const [stockData, setStockData] = useState<StockData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [marketStatus, setMarketStatus] = useState<{ isOpen: boolean; message: string; nextOpen: string } | null>(null);
   const [backgroundStatus, setBackgroundStatus] = useState<{
     isRunning: boolean;
     lastUpdate: string;
@@ -40,6 +106,18 @@ export default function HomePage() {
   
   // Use database-backed favorites with user ID
   const { favorites, toggleFavorite, isFavorite } = useFavorites(user?.id || 'default');
+
+  // Update market status every minute
+  useEffect(() => {
+    const updateMarketStatus = () => {
+      setMarketStatus(isMarketOpen());
+    };
+    
+    // Only calculate market status on client side to avoid hydration mismatch
+    updateMarketStatus();
+    const interval = setInterval(updateMarketStatus, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch background service status
   useEffect(() => {
@@ -242,6 +320,20 @@ export default function HomePage() {
             <div className="trading-hours-info">
               <p><strong>Live prices available from 4:00 AM to 8:00 PM EST daily</strong> • Pre-market (4:00-9:30 AM) • Market hours (9:30 AM-4:00 PM) • After-hours (4:00-8:00 PM)</p>
             </div>
+            {/* Market Status Indicator */}
+            {marketStatus && (
+              <div className={`market-status ${marketStatus.isOpen ? 'market-open' : 'market-closed'}`}>
+                <div className="market-status-icon">
+                  {marketStatus.isOpen ? <Activity size={16} /> : <Clock size={16} />}
+                </div>
+                <div className="market-status-text">
+                  <span className="market-status-label">{marketStatus.message}</span>
+                  {!marketStatus.isOpen && marketStatus.nextOpen && (
+                    <span className="market-status-next">Next open: {marketStatus.nextOpen}</span>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="description-section">
               <p>Track real-time pre-market movements of the top 300 largest companies traded globally. Monitor percentage changes, market cap fluctuations, and build your personalized watchlist.</p>
             </div>
@@ -372,6 +464,17 @@ export default function HomePage() {
             />
           </div>
         </div>
+
+        {/* Market Closed Notice */}
+        {marketStatus && !marketStatus.isOpen && (
+          <div className="market-closed-notice">
+            <AlertCircle size={16} />
+            <span>
+              <strong>Market is currently closed.</strong> Prices shown are from the last trading session. 
+              {marketStatus.nextOpen && ` Market reopens ${marketStatus.nextOpen}.`}
+            </span>
+          </div>
+        )}
 
 
 
