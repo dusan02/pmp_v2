@@ -255,4 +255,403 @@ body {
 
 .performance-details::-webkit-scrollbar-thumb:hover {
   @apply bg-gray-400 dark:bg-gray-500;
+}
+
+/* OptimizedImage Component Styles */
+.optimized-image-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.375rem;
+  transition: all 0.3s ease;
+}
+
+.optimized-image-container:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.optimized-image-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.optimized-image-loading {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+}
+
+.optimized-image-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.optimized-image-error {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.optimized-image-error:hover {
+  background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+}
+
+.optimized-image-performance-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0 0.375rem 0 0;
+  z-index: 10;
+}
+
+.optimized-image-cache-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.375rem 0 0 0;
+  z-index: 10;
+}
+
+.optimized-image-cache-hit {
+  background: #10b981;
+  color: white;
+}
+
+.optimized-image-cache-miss {
+  background: #f59e0b;
+  color: black;
+}
+
+/* Shimmer animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Company Logo specific styles */
+.company-logo-container {
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.company-logo-container:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.company-logo-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Responsive image optimizations */
+@media (max-width: 640px) {
+  .optimized-image-container {
+    border-radius: 0.25rem;
+  }
+  
+  .optimized-image-performance-badge,
+  .optimized-image-cache-badge {
+    font-size: 0.625rem;
+    padding: 0.0625rem 0.125rem;
+  }
+}
+
+/* Dark mode support for OptimizedImage */
+@media (prefers-color-scheme: dark) {
+  .optimized-image-skeleton {
+    background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  }
+  
+  .optimized-image-loading {
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  }
+  
+  .optimized-image-error {
+    background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+  }
+  
+  .optimized-image-error:hover {
+    background: linear-gradient(135deg, #991b1b 0%, #b91c1c 100%);
+  }
+}
+
+/* PerformanceOptimizer Demo Styles */
+.performance-optimizer-demo {
+  @apply bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 mb-6;
+  @apply border border-gray-200 dark:border-gray-700;
+}
+
+.demo-header {
+  @apply mb-6 text-center;
+}
+
+.demo-title {
+  @apply flex items-center justify-center gap-2 text-2xl font-bold text-gray-900 dark:text-white mb-2;
+}
+
+.demo-icon {
+  @apply text-blue-600 dark:text-blue-400;
+}
+
+.demo-description {
+  @apply text-gray-600 dark:text-gray-400 text-sm max-w-2xl mx-auto;
+}
+
+.demo-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6 mb-6;
+}
+
+.demo-card {
+  @apply bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700;
+}
+
+.card-header {
+  @apply flex items-center gap-2 mb-4;
+}
+
+.card-icon {
+  @apply text-blue-600 dark:text-blue-400;
+}
+
+.card-header h3 {
+  @apply text-lg font-semibold text-gray-900 dark:text-white;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+  @apply grid grid-cols-2 gap-3;
+}
+
+.metric-item {
+  @apply flex flex-col gap-1;
+}
+
+.metric-label {
+  @apply text-xs text-gray-500 dark:text-gray-400 font-medium;
+}
+
+.metric-value {
+  @apply text-sm font-semibold;
+}
+
+/* Status List */
+.status-list {
+  @apply space-y-3;
+}
+
+.status-item {
+  @apply flex items-center justify-between p-2 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600;
+}
+
+.status-info {
+  @apply flex items-center gap-2;
+}
+
+.status-label {
+  @apply text-sm text-gray-700 dark:text-gray-300;
+}
+
+.status-indicator {
+  @apply flex items-center;
+}
+
+.status-indicator.enabled {
+  @apply text-green-600 dark:text-green-400;
+}
+
+.status-indicator.disabled {
+  @apply text-red-600 dark:text-red-400;
+}
+
+.toggle-button {
+  @apply px-3 py-1 text-xs rounded border transition-colors;
+}
+
+.toggle-button.enabled {
+  @apply bg-green-100 text-green-700 border-green-300 dark:bg-green-900 dark:text-green-300 dark:border-green-700;
+}
+
+.toggle-button.disabled {
+  @apply bg-red-100 text-red-700 border-red-300 dark:bg-red-900 dark:text-red-300 dark:border-red-700;
+}
+
+.toggle-button:hover {
+  @apply opacity-80;
+}
+
+/* Violations List */
+.violations-list {
+  @apply space-y-2;
+}
+
+.no-violations {
+  @apply flex items-center gap-2 text-green-600 dark:text-green-400 text-sm;
+}
+
+.success-icon {
+  @apply text-green-600 dark:text-green-400;
+}
+
+.violation-item {
+  @apply flex items-center gap-2 text-red-600 dark:text-red-400 text-sm p-2 bg-red-50 dark:bg-red-900/20 rounded;
+}
+
+.violation-icon {
+  @apply text-red-600 dark:text-red-400;
+}
+
+/* Test Results */
+.test-results {
+  @apply space-y-3;
+}
+
+.no-tests {
+  @apply text-gray-500 dark:text-gray-400 text-sm text-center py-4;
+}
+
+.test-result {
+  @apply p-3 rounded border;
+}
+
+.test-result.success {
+  @apply bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800;
+}
+
+.test-result.failure {
+  @apply bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800;
+}
+
+.test-header {
+  @apply flex items-center justify-between mb-2;
+}
+
+.test-name {
+  @apply text-sm font-medium;
+}
+
+.test-result.success .test-name {
+  @apply text-green-700 dark:text-green-300;
+}
+
+.test-result.failure .test-name {
+  @apply text-red-700 dark:text-red-300;
+}
+
+.test-message {
+  @apply text-xs;
+}
+
+.test-result.success .test-message {
+  @apply text-green-600 dark:text-green-400;
+}
+
+.test-result.failure .test-message {
+  @apply text-red-600 dark:text-red-400;
+}
+
+/* Action Buttons */
+.demo-actions {
+  @apply flex flex-wrap gap-4 justify-center mb-6;
+}
+
+.action-button {
+  @apply flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.action-button.primary {
+  @apply bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600;
+}
+
+.action-button.secondary {
+  @apply bg-gray-600 text-white hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-600;
+}
+
+.action-button:hover:not(:disabled) {
+  @apply transform scale-105;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+/* Features Overview */
+.features-overview {
+  @apply border-t border-gray-200 dark:border-gray-700 pt-6;
+}
+
+.features-overview h3 {
+  @apply text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center;
+}
+
+.features-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+.feature-item {
+  @apply flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg;
+}
+
+.feature-icon {
+  @apply text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0;
+}
+
+.feature-content h4 {
+  @apply text-sm font-semibold text-gray-900 dark:text-white mb-1;
+}
+
+.feature-content p {
+  @apply text-xs text-gray-600 dark:text-gray-400;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .demo-grid {
+    @apply grid-cols-1;
+  }
+  
+  .features-grid {
+    @apply grid-cols-1;
+  }
+  
+  .demo-actions {
+    @apply flex-col items-center;
+  }
+  
+  .action-button {
+    @apply w-full max-w-xs;
+  }
 } 
