@@ -63,12 +63,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Initialize preloading optimizations and PWA features
-  if (typeof window !== 'undefined') {
-    initializePreloading();
-    initializePWA();
-  }
-
   return (
     <html lang="en">
       <head>

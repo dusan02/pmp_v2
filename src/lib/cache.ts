@@ -196,10 +196,17 @@ class StockDataCache {
     console.log('Starting cache update...');
 
     try {
-             const apiKey = process.env.POLYGON_API_KEY;
-       console.log('API Key found:', apiKey ? 'Yes' : 'No');
-       console.log('API Key length:', apiKey?.length);
-       console.log('API Key (first 10 chars):', apiKey?.substring(0, 10) + '...');
+      const apiKey = process.env.POLYGON_API_KEY;
+      console.log('API Key found:', apiKey ? 'Yes' : 'No');
+      
+      if (!apiKey || apiKey === 'your_polygon_api_key_here') {
+        console.log('No valid API key found. Using demo data for testing purposes.');
+        await this.loadDemoData();
+        return;
+      }
+      
+      console.log('API Key length:', apiKey?.length);
+      console.log('API Key (first 10 chars):', apiKey?.substring(0, 10) + '...');
        
        if (!apiKey) {
          console.error('POLYGON_API_KEY not found in environment variables');
@@ -399,6 +406,80 @@ class StockDataCache {
     } finally {
       this.isUpdating = false;
     }
+  }
+
+  async loadDemoData(): Promise<void> {
+    console.log('Loading demo data...');
+    const demoData: CachedStockData[] = [];
+
+    for (const ticker of this.TICKERS) {
+      const companyName = this.companyNames[ticker] || ticker;
+      const shares = this.shareCounts[ticker] || 1000000000; // Default to 1B shares
+
+      // Simulate fetching previous close and current price
+      const prevClose = Math.random() * 100 + 50; // Random previous close
+      const currentPrice = Math.random() * 150 + 100; // Random current price
+      const percentChange = ((currentPrice - prevClose) / prevClose) * 100;
+
+      // Simulate market cap calculation
+      const finalMarketCap = Math.random() * 1000 + 500; // Random market cap
+      const marketCapDiff = (currentPrice - prevClose) * (shares || 1000000000) / 1_000_000_000; // Default to 1B shares
+
+      const stockData = {
+        ticker,
+        preMarketPrice: Math.round(currentPrice * 100) / 100,
+        closePrice: Math.round(prevClose * 100) / 100,
+        percentChange: Math.round(percentChange * 100) / 100,
+        marketCapDiff: Math.round(marketCapDiff * 100) / 100,
+        marketCap: Math.round(finalMarketCap * 100) / 100,
+        lastUpdated: new Date()
+      };
+
+      demoData.push(stockData);
+      console.log(`✅ Loaded demo data for ${ticker}: $${currentPrice} (${percentChange >= 0 ? '+' : ''}${percentChange.toFixed(2)}%)`);
+
+      // Save to database
+      try {
+        runTransaction(() => {
+          dbHelpers.upsertStock.run(
+            ticker,
+            companyName,
+            finalMarketCap * 1_000_000_000,
+            shares,
+            new Date().toISOString()
+          );
+          dbHelpers.addPriceHistory.run(
+            ticker,
+            currentPrice,
+            1000000, // Simulate volume
+            new Date().toISOString()
+          );
+        });
+      } catch (dbError) {
+        console.error(`Database error for demo data ${ticker}:`, dbError);
+      }
+    }
+
+    // Update in-memory cache
+    this.cache.clear();
+    demoData.forEach(stock => {
+      this.cache.set(stock.ticker, stock);
+    });
+
+    // Update Redis cache
+    try {
+      await setCachedData(CACHE_KEYS.STOCK_DATA, demoData);
+      await setCacheStatus({
+        count: demoData.length,
+        lastUpdated: new Date(),
+        isUpdating: false
+      });
+      console.log(`✅ Redis cache updated with ${demoData.length} stocks at ${new Date().toISOString()}`);
+    } catch (error) {
+      console.error('Failed to update Redis cache with demo data:', error);
+    }
+
+    console.log(`Demo cache updated with ${demoData.length} stocks at ${new Date().toISOString()}`);
   }
 
   startBackgroundUpdates(): void {

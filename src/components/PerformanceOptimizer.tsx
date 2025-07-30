@@ -2,6 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { usePerformance } from '@/hooks/usePerformance';
+import { reportWebVitals } from '@/lib/web-vitals';
+import { initializePreloading } from '@/lib/preload';
+import { initializePWA } from '@/lib/sw-register';
 
 interface PerformanceOptimizerProps {
   children: React.ReactNode;
@@ -13,6 +16,13 @@ export default function PerformanceOptimizer({ children }: PerformanceOptimizerP
 
   useEffect(() => {
     setIsClient(true);
+    
+    // Initialize Core Web Vitals tracking
+    reportWebVitals();
+    
+    // Initialize preloading and PWA features
+    initializePreloading();
+    initializePWA();
     
     // Report initial load performance
     if (typeof window !== 'undefined') {
