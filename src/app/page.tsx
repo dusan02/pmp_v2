@@ -12,6 +12,8 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/AuthModal';
 import { Activity } from 'lucide-react';
+import PerformanceDashboard from '@/components/PerformanceDashboard';
+import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 
 interface StockData {
   ticker: string;
@@ -565,6 +567,16 @@ export default function HomePage() {
           window.location.reload();
         }}
       />
+
+      {/* Performance Dashboard */}
+      <div className="mb-6">
+        <PerformanceDashboard />
+      </div>
+
+      {/* Analytics Dashboard */}
+      <div className="mb-6">
+        <AnalyticsDashboard />
+      </div>
     </div>
   );
 } 

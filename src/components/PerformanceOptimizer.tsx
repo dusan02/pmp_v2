@@ -5,6 +5,8 @@ import { usePerformance } from '@/hooks/usePerformance';
 import { reportWebVitals } from '@/lib/web-vitals';
 import { initializePreloading } from '@/lib/preload';
 import { initializePWA } from '@/lib/sw-register';
+import { performanceMonitor } from '@/lib/performance-api';
+import { analytics } from '@/lib/analytics';
 
 interface PerformanceOptimizerProps {
   children: React.ReactNode;
@@ -20,6 +22,12 @@ export default function PerformanceOptimizer({ children }: PerformanceOptimizerP
     // Initialize Core Web Vitals tracking
     reportWebVitals();
     
+    // Initialize advanced Performance API monitoring
+    console.log('🚀 Initializing advanced Performance API monitoring...');
+    
+    // Initialize analytics system
+    console.log('📊 Initializing analytics system...');
+    
     // Initialize preloading and PWA features
     initializePreloading();
     initializePWA();
@@ -29,21 +37,43 @@ export default function PerformanceOptimizer({ children }: PerformanceOptimizerP
       const loadTime = performance.now();
       reportMetric('Initial Load', loadTime);
       
+      // Track page view
+      analytics.trackPageView(window.location.pathname, document.title);
+      
       // Report DOM content loaded
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
           const domReadyTime = performance.now();
           reportMetric('DOM Ready', domReadyTime);
+          
+          // Track DOM ready event
+          analytics.track('performance', 'dom_ready', 'DOM Content Loaded', domReadyTime);
         });
       } else {
         const domReadyTime = performance.now();
         reportMetric('DOM Ready', domReadyTime);
+        analytics.track('performance', 'dom_ready', 'DOM Content Loaded', domReadyTime);
       }
       
       // Report window load
       window.addEventListener('load', () => {
         const windowLoadTime = performance.now();
         reportMetric('Window Load', windowLoadTime);
+        
+        // Track window load event
+        analytics.track('performance', 'window_load', 'Window Load Complete', windowLoadTime);
+        
+        // Log performance summary after page load
+        setTimeout(() => {
+          const summary = performanceMonitor.getPerformanceSummary();
+          console.log('📊 Performance Summary:', summary);
+          
+          // Track performance metrics
+          analytics.trackPerformance('navigation_total_time', summary.navigation.totalTime);
+          analytics.trackPerformance('memory_usage_percent', 
+            (summary.memory.used / summary.memory.limit) * 100);
+          analytics.trackPerformance('resource_count', summary.resources.total);
+        }, 1000);
       });
     }
   }, [reportMetric]);
@@ -58,9 +88,15 @@ export default function PerformanceOptimizer({ children }: PerformanceOptimizerP
           if (entry.isIntersecting) {
             const img = entry.target as HTMLImageElement;
             if (img.dataset.src) {
-              img.src = img.dataset.src;
-              img.removeAttribute('data-src');
-              imageObserver.unobserve(img);
+              // Measure image loading performance
+              performanceMonitor.measureAsyncMetric(`Image Load: ${img.dataset.src}`, async () => {
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+                imageObserver.unobserve(img);
+              });
+              
+              // Track image load event
+              analytics.track('performance', 'image_load', img.dataset.src);
             }
           }
         });
@@ -89,7 +125,15 @@ export default function PerformanceOptimizer({ children }: PerformanceOptimizerP
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const table = entry.target as HTMLTableElement;
-            table.classList.add('table-loaded');
+            
+            // Measure table rendering performance
+            performanceMonitor.measureCustomMetric(`Table Render: ${table.className || 'unknown'}`, () => {
+              table.classList.add('table-loaded');
+            });
+            
+            // Track table render event
+            analytics.track('performance', 'table_render', table.className || 'unknown');
+            
             tableObserver.unobserve(table);
           }
         });
@@ -106,6 +150,42 @@ export default function PerformanceOptimizer({ children }: PerformanceOptimizerP
 
     return () => {
       tableObserver.disconnect();
+    };
+  }, [isClient]);
+
+  // Track user interactions
+  useEffect(() => {
+    if (!isClient) return;
+
+    // Track stock interactions
+    const trackStockInteraction = (ticker: string, action: string, price?: number, change?: number) => {
+      analytics.track('business', action, ticker, price, {
+        ticker,
+        price,
+        change,
+        action
+      });
+    };
+
+    // Track favorite toggles
+    const trackFavoriteToggle = (ticker: string, isFavorite: boolean) => {
+      analytics.trackFavoriteToggle(ticker, isFavorite);
+    };
+
+    // Track search events
+    const trackSearch = (query: string, results: number) => {
+      analytics.trackSearch(query, results);
+    };
+
+    // Expose tracking functions globally for other components
+    (window as any).trackStockInteraction = trackStockInteraction;
+    (window as any).trackFavoriteToggle = trackFavoriteToggle;
+    (window as any).trackSearch = trackSearch;
+
+    return () => {
+      delete (window as any).trackStockInteraction;
+      delete (window as any).trackFavoriteToggle;
+      delete (window as any).trackSearch;
     };
   }, [isClient]);
 
