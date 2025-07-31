@@ -9,6 +9,11 @@ import VirtualizedStockTable from '@/components/VirtualizedStockTable';
 
 import { useFavorites } from '@/hooks/useFavorites';
 import { Activity } from 'lucide-react';
+import PerformanceDashboard from '@/components/PerformanceDashboard';
+import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import ImageOptimizationDemo from '@/components/ImageOptimizationDemo';
+import CompanyLogoDemo from '@/components/CompanyLogoDemo';
+import PerformanceOptimizerDemo from '@/components/PerformanceOptimizerDemo';
 
 interface StockData {
   ticker: string;
@@ -607,6 +612,33 @@ export default function HomePage() {
             Visit Kiddobank.com
           </a>
         </p>
+      </div>
+      
+
+
+      {/* Performance Dashboard */}
+      <div className="mb-6">
+        <PerformanceDashboard />
+      </div>
+
+      {/* Analytics Dashboard */}
+      <div className="mb-6">
+        <AnalyticsDashboard />
+      </div>
+
+      {/* Image Optimization Demo */}
+      <div className="mb-6">
+        <ImageOptimizationDemo />
+      </div>
+
+      {/* Company Logo Demo */}
+      <div className="mb-6">
+        <CompanyLogoDemo />
+      </div>
+
+      {/* Performance Optimizer Demo */}
+      <div className="mb-6">
+        <PerformanceOptimizerDemo />
       </div>
     </div>
   );

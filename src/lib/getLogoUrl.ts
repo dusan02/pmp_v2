@@ -516,34 +516,120 @@ export const companyColors: Record<string, string> = {
   'BIDU': '0066CC', 'STX': '0066CC', 'WBD': '0066CC', 'TME': '0066CC', 'EBAY': '0066CC'
 };
 
-export function getLogoUrl(ticker: string): string {
-  const domain = tickerDomains[ticker];
-  
-  // If no domain mapping exists, return ui-avatars directly
-  if (!domain) {
-    const color = companyColors[ticker] || '0066CC';
-    return `https://ui-avatars.com/api/?name=${ticker}&background=${color}&size=32&color=fff&font-size=0.4&bold=true&format=png`;
-  }
-  
-  // Try multiple logo sources for real company logos
-  const logoSources = [
-    // Primary: Clearbit (most reliable for real logos)
-    `https://logo.clearbit.com/${domain}?size=32`,
-    // Fallback 1: Local logo if available
-    localLogos[ticker] || null,
-    // Fallback 2: Google Favicon (works for most companies)
-    `https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
-    // Fallback 3: DuckDuckGo favicon
-    `https://icons.duckduckgo.com/ip3/${domain}.ico`,
-    // Last resort: ui-avatars with company colors
-    `https://ui-avatars.com/api/?name=${ticker}&background=${companyColors[ticker] || '0066CC'}&size=32&color=fff&font-size=0.4&bold=true&format=png`
-  ].filter(Boolean); // Remove null values
-  
-  // Return the first source (Clearbit) - fallback logic is in the component
-  return logoSources[0];
+// Logo source performance tracking
+interface LogoSourcePerformance {
+  [source: string]: {
+    successCount: number;
+    failureCount: number;
+    averageLoadTime: number;
+    lastUsed: number;
+  };
+}
 }
 
-// Helper function to get just the domain
+const logoSourcePerformance: LogoSourcePerformance = {};
+
+// Logo source types with priority and reliability scores
+const LOGO_SOURCES = {
+  CLEARBIT: {
+    name: 'clearbit',
+    url: (domain: string, size: number) => `https://logo.clearbit.com/${domain}?size=${size}`,
+    priority: 1,
+    reliability: 0.95,
+    quality: 'high'
+  },
+  GOOGLE: {
+    name: 'google',
+    url: (domain: string, size: number) => `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`,
+    priority: 2,
+    reliability: 0.90,
+    quality: 'medium'
+  },
+  DUCKDUCKGO: {
+    name: 'duckduckgo',
+    url: (domain: string, size: number) => `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+    priority: 3,
+    reliability: 0.85,
+    quality: 'medium'
+  },
+  UI_AVATARS: {
+    name: 'ui-avatars',
+    url: (ticker: string, size: number, color: string) => `https://ui-avatars.com/api/?name=${ticker}&background=${color}&size=${size}&color=fff&font-size=0.4&bold=true&format=png`,
+    priority: 4,
+    reliability: 0.99,
+    quality: 'low'
+  }
+};
+
+// Track logo source performance
+export const trackLogoSourcePerformance = (source: string, success: boolean, loadTime: number) => {
+  if (!logoSourcePerformance[source]) {
+    logoSourcePerformance[source] = {
+      successCount: 0,
+      failureCount: 0,
+      averageLoadTime: 0,
+      lastUsed: Date.now()
+    };
+  }
+
+  const stats = logoSourcePerformance[source];
+  if (success) {
+    stats.successCount++;
+  } else {
+    stats.failureCount++;
+  }
+
+  // Update average load time
+  const totalAttempts = stats.successCount + stats.failureCount;
+  stats.averageLoadTime = (stats.averageLoadTime * (totalAttempts - 1) + loadTime) / totalAttempts;
+  stats.lastUsed = Date.now();
+};
+
+// Get performance-based logo sources
+export const getOptimizedLogoSources = (ticker: string, size: number): string[] => {
+  let domain: string;
+  try {
+    domain = getDomain(ticker);
+  } catch (error) {
+    const color = companyColors[ticker] || '0066CC';
+    return [LOGO_SOURCES.UI_AVATARS.url(ticker, size, color)];
+  }
+
+  const sources = [
+    LOGO_SOURCES.CLEARBIT.url(domain, size),
+    LOGO_SOURCES.GOOGLE.url(domain, size),
+    LOGO_SOURCES.DUCKDUCKGO.url(domain, size),
+    LOGO_SOURCES.UI_AVATARS.url(ticker, size, companyColors[ticker] || '0066CC')
+  ];
+
+  // Sort by performance if available
+  return sources.sort((a, b) => {
+    const aStats = logoSourcePerformance[a];
+    const bStats = logoSourcePerformance[b];
+    
+    if (!aStats && !bStats) return 0;
+    if (!aStats) return 1;
+    if (!bStats) return -1;
+    
+    const aSuccessRate = aStats.successCount / (aStats.successCount + aStats.failureCount);
+    const bSuccessRate = bStats.successCount / (bStats.successCount + bStats.failureCount);
+    
+    return bSuccessRate - aSuccessRate;
+  });
+};
+
+// Get logo source statistics
+export const getLogoSourceStats = () => {
+  return Object.entries(logoSourcePerformance).map(([source, stats]) => ({
+    source,
+    successRate: (stats.successCount / (stats.successCount + stats.failureCount)) * 100,
+    totalAttempts: stats.successCount + stats.failureCount,
+    averageLoadTime: stats.averageLoadTime,
+    lastUsed: new Date(stats.lastUsed)
+  }));
+};
+
+// Enhanced domain mapping with fallbacks
 export function getDomain(ticker: string): string {
   const domain = tickerDomains[ticker];
   if (!domain) {
@@ -552,8 +638,60 @@ export function getDomain(ticker: string): string {
   return domain;
 }
 
-// Alternative function for Clearbit (if needed in future)
-export function getClearbitLogoUrl(ticker: string): string {
-  const domain = tickerDomains[ticker] ?? `${ticker.toLowerCase()}.com`;
-  return `https://logo.clearbit.com/${domain}?size=32`;
-} 
+// Get domain with fallback
+export function getDomainWithFallback(ticker: string): string {
+  try {
+    return getDomain(ticker);
+  } catch (error) {
+    // Generate fallback domain
+    return `${ticker.toLowerCase()}.com`;
+  }
+}
+
+// Enhanced logo URL generation with performance optimization
+export function getLogoUrl(ticker: string, size: number = 32): string {
+  const domain = getDomainWithFallback(ticker);
+  return LOGO_SOURCES.CLEARBIT.url(domain, size);
+}
+
+// Get all possible logo URLs for a ticker
+export function getAllLogoUrls(ticker: string, size: number = 32): string[] {
+  return getOptimizedLogoSources(ticker, size);
+}
+
+// Get company color
+export function getCompanyColor(ticker: string): string {
+  return companyColors[ticker] || '0066CC';
+}
+
+// Generate fallback avatar URL
+export function getFallbackAvatarUrl(ticker: string, size: number = 32): string {
+  const color = getCompanyColor(ticker);
+  return LOGO_SOURCES.UI_AVATARS.url(ticker, size, color);
+}
+
+// Preload logo for better performance
+export function preloadLogo(ticker: string, size: number = 32): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error(`Failed to preload logo for ${ticker}`));
+    img.src = getLogoUrl(ticker, size);
+  });
+}
+
+// Batch preload logos
+export function preloadLogos(tickers: string[], size: number = 32): Promise<void[]> {
+  return Promise.allSettled(tickers.map(ticker => preloadLogo(ticker, size)))
+    .then(results => results.map(result => 
+      result.status === 'fulfilled' ? Promise.resolve() : Promise.reject(result.reason)
+    ));
+}
+
+// Get logo cache key
+export function getLogoCacheKey(ticker: string, size: number, variant: string = 'default'): string {
+  return `${ticker}-${size}-${variant}`;
+}
+
+// Export logo sources for external use
+export { LOGO_SOURCES, logoSourcePerformance }; 

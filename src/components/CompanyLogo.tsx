@@ -1,54 +1,69 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getDomain, companyColors } from '@/lib/getLogoUrl';
+import OptimizedImage from './OptimizedImage';
 
 interface CompanyLogoProps {
   ticker: string;
   size?: number;
   className?: string;
   priority?: boolean;
+  onLoad?: () => void;
+  onError?: () => void;
+  variant?: 'default' | 'square' | 'rounded';
+  showFallback?: boolean;
+  cacheKey?: string;
+  retryAttempts?: number;
 }
 
-// Cache for successful logo URLs to avoid repeated requests
-const logoCache = new Map<string, string>();
+interface LogoCache {
+  [key: string]: {
+    src: string;
+    timestamp: number;
+    success: boolean;
+    loadTime: number;
+  };
+}
 
-// Local logo mapping for companies that have local logos
-const localLogos: Record<string, string> = {
-  'NVDA': '/logos/nvidia.svg',
-  'MSFT': '/logos/microsoft.svg',
-  'AAPL': '/logos/apple.svg',
-  'AMZN': '/logos/amazon.svg',
-  'GOOGL': '/logos/google.svg',
-  'GOOG': '/logos/google.svg',
-  'TSLA': '/logos/tesla.svg',
-  'META': '/logos/meta.svg',
-  'NFLX': '/logos/netflix.svg',
-  'MSCI': '/logos/msci.svg',
-  'ILMN': '/logos/illumina.svg',
-  'STZ': '/logos/constellation.svg'
-};
+// Global cache for logo sources
+const logoCache: LogoCache = {};
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+const MAX_RETRY_ATTEMPTS = 3;
 
 export default function CompanyLogo({
   ticker,
   size = 32,
   className = '',
-  priority = false
+  priority = false,
+  onLoad,
+  onError,
+  variant = 'default',
+  showFallback = true,
+  cacheKey,
+  retryAttempts = MAX_RETRY_ATTEMPTS
 }: CompanyLogoProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [src, setSrc] = useState<string | null>(null);
+  const [logoSources, setLogoSources] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
+  const [loadStartTime, setLoadStartTime] = useState<number>(0);
+  const [bestSource, setBestSource] = useState<string | null>(null);
 
-  // Get optimized logo sources with caching
-  const getLogoSources = useMemo(() => {
+  // Generate cache key
+  const cacheKeyFinal = useMemo(() => {
+    return cacheKey || `${ticker}-${size}-${variant}`;
+  }, [ticker, size, variant, cacheKey]);
+
+  // Get all possible logo sources with intelligent ordering
+  const getLogoSources = useCallback((ticker: string, size: number) => {
     // Check cache first
-    const cachedUrl = logoCache.get(ticker);
-    if (cachedUrl) {
-      return [cachedUrl];
+    const cached = logoCache[cacheKeyFinal];
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION && cached.success) {
+      return [cached.src];
     }
 
-    // Use the centralized domain mapping from getLogoUrl.ts
-    let domain: string | null = null;
+    let domain: string;
     try {
       domain = getDomain(ticker);
     } catch (error) {
@@ -57,103 +72,218 @@ export default function CompanyLogo({
       return [];
     }
     
-    return [
-      // Primary: Clearbit Logo API (most reliable for real logos)
-      `https://logo.clearbit.com/${domain}?size=${size}`,
-      // Fallback 1: Local logo if available
-      localLogos[ticker] || null,
-      // Fallback 2: Google Favicon (works for most companies)
-      `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`,
-      // Fallback 3: DuckDuckGo favicon
-      `https://icons.duckduckgo.com/ip3/${domain}.ico`
-      // No ui-avatars.com!
-    ].filter(Boolean); // Remove null values
-  }, [ticker, size]);
+    // Intelligent source ordering based on reliability and performance
+    const sources = [
+      // Primary: Clearbit (highest quality, most reliable)
+      {
+        url: `https://logo.clearbit.com/${domain}?size=${size}`,
+        priority: 1,
+        type: 'clearbit'
+      },
+      // Secondary: Google Favicon (good quality, reliable)
+      {
+        url: `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`,
+        priority: 2,
+        type: 'google'
+      },
+      // Tertiary: DuckDuckGo favicon (alternative)
+      {
+        url: `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+        priority: 3,
+        type: 'duckduckgo'
+      },
+      // Last resort: ui-avatars with company colors
+      {
+        url: `https://ui-avatars.com/api/?name=${ticker}&background=${companyColors[ticker] || '0066CC'}&size=${size}&color=fff&font-size=0.4&bold=true&format=png`,
+        priority: 4,
+        type: 'ui-avatars'
+      }
+    ];
 
+    // Sort by priority and return URLs
+    return sources.sort((a, b) => a.priority - b.priority).map(s => s.url);
+  }, [cacheKeyFinal]);
+
+  // Initialize logo sources
   useEffect(() => {
-    const logoSources = getLogoSources;
-    
-    // If we have a cached URL, use it directly
-    if (logoSources.length === 1 && logoCache.has(ticker)) {
-      setSrc(logoSources[0]);
-      setIsLoading(false);
-      return;
-    }
-    
+    const sources = getLogoSources(ticker, size);
+    setLogoSources(sources);
     setCurrentIndex(0);
-    setSrc(logoSources[0] || null);
     setIsLoading(true);
+    setRetryCount(0);
+    setLoadStartTime(performance.now());
   }, [ticker, size, getLogoSources]);
 
-  useEffect(() => {
-    if (!src || src === '') return;
+  // Enhanced error handling with intelligent retry
+  const handleImageError = useCallback(() => {
+    const loadTime = performance.now() - loadStartTime;
+    const currentSrc = logoSources[currentIndex];
+    
+    console.log(`❌ Logo failed for ${ticker}: ${currentSrc} (${currentIndex + 1}/${logoSources.length}) - Load time: ${loadTime.toFixed(2)}ms`);
+    
+    // Cache the failed attempt
+    logoCache[cacheKeyFinal] = {
+      src: currentSrc,
+      timestamp: Date.now(),
+      success: false,
+      loadTime
+    };
 
-    const logoSources = getLogoSources;
-    const img = new window.Image();
-    img.src = src;
-
-    const handleLoad = () => {
+    if (currentIndex < logoSources.length - 1 && retryCount < retryAttempts) {
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      setRetryCount(prev => prev + 1);
+      setLoadStartTime(performance.now());
+    } else {
+      // All sources failed or max retries reached
       setIsLoading(false);
-      // Cache successful URLs (only cache real logos, not fallbacks)
-      if (src && !src.includes('duckduckgo.com')) {
-        logoCache.set(ticker, src);
+      console.warn(`⚠️ All logo sources failed for ${ticker} after ${retryCount + 1} attempts. Using fallback.`);
+      
+      // Track analytics
+      if (typeof window !== 'undefined' && (window as any).trackLogoFailure) {
+        (window as any).trackLogoFailure(ticker, retryCount, logoSources);
       }
+      
+      onError?.();
+    }
+  }, [ticker, currentIndex, logoSources, retryCount, retryAttempts, loadStartTime, cacheKeyFinal, onError]);
+
+  // Enhanced load handling with caching
+  const handleImageLoad = useCallback(() => {
+    const loadTime = performance.now() - loadStartTime;
+    const currentSrc = logoSources[currentIndex];
+    
+    setIsLoading(false);
+    setBestSource(currentSrc);
+    
+    console.log(`✅ Logo loaded successfully for ${ticker}: ${currentSrc} - Load time: ${loadTime.toFixed(2)}ms`);
+    
+    // Cache the successful source
+    logoCache[cacheKeyFinal] = {
+      src: currentSrc,
+      timestamp: Date.now(),
+      success: true,
+      loadTime
     };
 
-    const handleError = () => {
-      if (currentIndex < logoSources.length - 1) {
-        const nextIndex = currentIndex + 1;
-        setCurrentIndex(nextIndex);
-        setSrc(logoSources[nextIndex]);
-      } else {
-        // All sources failed, fallback to initials
-        setSrc(null);
-        setIsLoading(false);
-      }
-    };
+    // Track analytics
+    if (typeof window !== 'undefined' && (window as any).trackLogoSuccess) {
+      (window as any).trackLogoSuccess(ticker, currentSrc, loadTime, currentIndex);
+    }
+    
+    onLoad?.();
+  }, [ticker, currentIndex, logoSources, loadStartTime, cacheKeyFinal, onLoad]);
 
-    img.onload = handleLoad;
-    img.onerror = handleError;
+  // Get variant-specific styling
+  const getVariantStyles = useCallback(() => {
+    switch (variant) {
+      case 'square':
+        return 'rounded';
+      case 'rounded':
+        return 'rounded-lg';
+      default:
+        return 'rounded-full';
+    }
+  }, [variant]);
 
-    return () => {
-      img.onload = null;
-      img.onerror = null;
-    };
-  }, [src, currentIndex, ticker, getLogoSources]);
+  // Generate fallback component
+  const renderFallback = useCallback(() => {
+    if (!showFallback) return null;
 
-  // Fallback: render initials if no logo is available
-  if (!src || src === '') {
+    const color = companyColors[ticker] || '0066CC';
+    const backgroundColor = `#${color}`;
+    
     return (
       <div 
-        className={`rounded-full bg-gray-200 flex items-center justify-center ${className}`}
+        className={`${getVariantStyles()} flex items-center justify-center text-white font-bold ${className}`}
         style={{ 
           width: size, 
           height: size,
-          opacity: 0.8,
-          fontWeight: 'bold',
-          fontSize: size * 0.5,
-          color: '#666',
-          userSelect: 'none',
+          backgroundColor,
+          fontSize: Math.max(size * 0.3, 10)
         }}
+        title={`${ticker} logo`}
       >
-        {ticker}
+        {ticker.slice(0, 2).toUpperCase()}
       </div>
     );
+  }, [ticker, size, variant, className, showFallback, getVariantStyles]);
+
+  // Don't render if no sources available
+  if (logoSources.length === 0) {
+    return renderFallback();
   }
 
+  const currentSrc = logoSources[currentIndex];
+  const fallbackSrc = logoSources.length > 1 ? logoSources[logoSources.length - 1] : undefined;
+
   return (
-    <img
-      src={src}
-      alt={`${ticker} company logo`}
-      width={size}
-      height={size}
-      className={`rounded-full ${className}`}
-      style={{ 
-        objectFit: 'contain',
-        opacity: isLoading ? 0.5 : 1,
-        transition: 'opacity 0.2s ease-in-out'
-      }}
-      loading={priority ? 'eager' : 'lazy'}
-    />
+    <div className="relative">
+      <OptimizedImage
+        src={currentSrc}
+        alt={`${ticker} company logo`}
+        width={size}
+        height={size}
+        className={`${getVariantStyles()} ${className}`}
+        priority={priority}
+        fallback={fallbackSrc}
+        onLoad={handleImageLoad}
+        onError={handleImageError}
+        quality={90}
+        format="auto"
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
+        fetchPriority={priority ? 'high' : 'auto'}
+        style={{ objectFit: 'contain' }}
+        title={`${ticker} logo`}
+      />
+      
+      {/* Performance indicator for development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="absolute -top-1 -right-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded text-center min-w-[20px]">
+          {currentIndex + 1}
+        </div>
+      )}
+      
+      {/* Loading indicator */}
+      {isLoading && (
+        <div className={`absolute inset-0 ${getVariantStyles()} bg-gray-200 animate-pulse flex items-center justify-center`}>
+          <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+    </div>
   );
-} 
+}
+
+// Utility functions for external use
+export const clearLogoCache = () => {
+  Object.keys(logoCache).forEach(key => delete logoCache[key]);
+  console.log('🧹 Logo cache cleared');
+};
+
+export const getLogoCacheStats = () => {
+  const total = Object.keys(logoCache).length;
+  const successful = Object.values(logoCache).filter(entry => entry.success).length;
+  const failed = total - successful;
+  
+  return {
+    total,
+    successful,
+    failed,
+    successRate: total > 0 ? (successful / total) * 100 : 0,
+    averageLoadTime: Object.values(logoCache).reduce((sum, entry) => sum + entry.loadTime, 0) / total || 0
+  };
+};
+
+export const preloadCompanyLogos = (tickers: string[], size: number = 32) => {
+  tickers.forEach(ticker => {
+    const img = new Image();
+    img.src = `https://logo.clearbit.com/${getDomain(ticker)}?size=${size}`;
+    img.onload = () => {
+      console.log(`🔄 Preloaded logo for ${ticker}`);
+    };
+    img.onerror = () => {
+      console.log(`⚠️ Failed to preload logo for ${ticker}`);
+    };
+  });
+}; 
