@@ -282,6 +282,8 @@ body{font-family:var(--font-sans);background:var(--clr-bg);color:var(--clr-text)
   opacity: 0.8;
 }
 
+
+
 /* Market Closed Notice */
 .market-closed-notice {
   display: flex;
@@ -299,6 +301,107 @@ body{font-family:var(--font-sans);background:var(--clr-bg);color:var(--clr-text)
 .market-closed-notice svg {
   flex-shrink: 0;
   color: #f59e0b;
+}
+
+/* Market Status Notice */
+.market-status-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: color-mix(in srgb, #3b82f6 5%, transparent);
+  border: 1px solid color-mix(in srgb, #3b82f6 15%, transparent);
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  color: #1e40af;
+  font-size: 0.875rem;
+}
+
+.market-status-notice svg {
+  flex-shrink: 0;
+  color: #3b82f6;
+}
+
+/* Virtualized table styles */
+.virtualized-table-container {
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.virtualized-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.virtualized-table th {
+  background: #f8fafc;
+  padding: 1rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.virtualized-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.virtualized-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.virtualized-table-body {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.virtualized-table-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.virtualized-table-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.virtualized-table-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.virtualized-table-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode support */
+.dark .virtualized-table-container {
+  background: #1f2937;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+.dark .virtualized-table {
+  background: #1f2937;
+}
+
+.dark .virtualized-table th {
+  background: #374151;
+  color: #f9fafb;
+  border-bottom-color: #4b5563;
+}
+
+.dark .virtualized-table td {
+  border-bottom-color: #374151;
+  color: #f9fafb;
+}
+
+.dark .virtualized-table tbody tr:hover {
+  background-color: #374151;
 }
 
 /* Market Indicators Section */

@@ -127,7 +127,12 @@ const PRIORITY_ASSETS = {
 const OFFLINE_ASSETS = {
   pages: ["/", "/offline.html"],
   critical_data: ["/api/prices/cached", "/api/auth/me", "/api/favorites"],
-  static_assets: ["/favicon.ico", "/icon-192.png", "/icon-512.png", "/manifest.json"],
+  static_assets: [
+    "/favicon.ico",
+    "/icon-192.png",
+    "/icon-512.png",
+    "/manifest.json",
+  ],
   fallback_data: {
     "/api/prices/cached": {
       data: [],
@@ -417,7 +422,7 @@ async function handleOfflineApiRequest(request) {
   if (OFFLINE_ASSETS.fallback_data[pathname]) {
     cacheStats.offlineStats.offlineHits++;
     console.log(`[SW] Serving offline fallback for: ${pathname}`);
-    
+
     return new Response(
       JSON.stringify({
         ...OFFLINE_ASSETS.fallback_data[pathname],
@@ -441,11 +446,11 @@ async function handleOfflineApiRequest(request) {
   if (cachedResponse) {
     cacheStats.offlineStats.offlineHits++;
     console.log(`[SW] Serving cached response for: ${pathname}`);
-    
+
     // Add offline headers to cached response
     const responseBody = await cachedResponse.text();
     const responseData = JSON.parse(responseBody);
-    
+
     return new Response(
       JSON.stringify({
         ...responseData,
@@ -458,7 +463,9 @@ async function handleOfflineApiRequest(request) {
         headers: {
           ...Object.fromEntries(cachedResponse.headers.entries()),
           "X-Offline": "true",
-          "X-Cached-At": cachedResponse.headers.get("sw-cache-timestamp") || Date.now().toString(),
+          "X-Cached-At":
+            cachedResponse.headers.get("sw-cache-timestamp") ||
+            Date.now().toString(),
         },
       }
     );
@@ -467,7 +474,7 @@ async function handleOfflineApiRequest(request) {
   // Generic offline response
   cacheStats.offlineStats.offlineMisses++;
   console.log(`[SW] No offline data available for: ${pathname}`);
-  
+
   return new Response(
     JSON.stringify({
       error: "Offline - No cached data available",
@@ -698,7 +705,7 @@ async function handleNavigationRequest(request, strategy) {
 // Handle offline navigation with intelligent fallbacks
 async function handleOfflineNavigation(request) {
   const url = new URL(request.url);
-  
+
   // Try to get cached version of the requested page
   const cachedResponse = await caches.match(request);
   if (cachedResponse) {
@@ -797,7 +804,7 @@ async function handleOfflineNavigation(request) {
     </body>
     </html>`,
     {
-      headers: { 
+      headers: {
         "Content-Type": "text/html",
         "X-Offline": "true",
       },
@@ -821,43 +828,42 @@ function updateStats(strategy, type, priority) {
 // Update offline state
 function updateOfflineState(isOffline) {
   const now = Date.now();
-  
+
   if (isOffline && !offlineState.isOffline) {
     // Going offline
     offlineState.isOffline = true;
     offlineState.offlineStartTime = now;
     offlineState.connectionQuality = "offline";
-    
+
     console.log("[SW] Going offline");
-    
+
     // Notify clients about offline state
     notifyClients({
       type: "OFFLINE_STATE_CHANGED",
       isOffline: true,
       timestamp: now,
     });
-    
   } else if (!isOffline && offlineState.isOffline) {
     // Going online
     offlineState.isOffline = false;
     offlineState.lastOnlineTime = now;
     offlineState.connectionQuality = "good";
-    
+
     if (offlineState.offlineStartTime) {
       const offlineDuration = now - offlineState.offlineStartTime;
       offlineState.totalOfflineTime += offlineDuration;
       cacheStats.offlineStats.lastOfflineTime = offlineDuration;
     }
-    
+
     console.log("[SW] Going online");
-    
+
     // Notify clients about online state
     notifyClients({
       type: "OFFLINE_STATE_CHANGED",
       isOffline: false,
       timestamp: now,
     });
-    
+
     // Trigger background sync
     triggerBackgroundSync();
   }
@@ -868,11 +874,11 @@ function initializeOfflineMonitoring() {
   // Monitor connection quality
   setInterval(async () => {
     try {
-      const response = await fetch("/api/prices/cached", { 
+      const response = await fetch("/api/prices/cached", {
         method: "HEAD",
-        cache: "no-cache" 
+        cache: "no-cache",
       });
-      
+
       if (response.ok) {
         updateOfflineState(false);
       } else {
@@ -1016,22 +1022,28 @@ async function doBackgroundSync() {
 async function syncOfflineData() {
   try {
     console.log("[SW] Starting offline data sync...");
-    
+
     // Process pending requests
     for (const pendingRequest of offlineState.pendingRequests) {
       try {
-        const response = await fetch(pendingRequest.url, pendingRequest.options);
+        const response = await fetch(
+          pendingRequest.url,
+          pendingRequest.options
+        );
         if (response.ok) {
           console.log(`[SW] Synced pending request: ${pendingRequest.url}`);
         }
       } catch (error) {
-        console.error(`[SW] Failed to sync pending request: ${pendingRequest.url}`, error);
+        console.error(
+          `[SW] Failed to sync pending request: ${pendingRequest.url}`,
+          error
+        );
       }
     }
-    
+
     // Clear pending requests
     offlineState.pendingRequests = [];
-    
+
     console.log("[SW] Offline data sync completed");
   } catch (error) {
     console.error("[SW] Offline data sync failed:", error);

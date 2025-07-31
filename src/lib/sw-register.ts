@@ -95,14 +95,14 @@ class ServiceWorkerManager {
     }
 
     try {
-      console.log('[SW Manager] Registering Service Worker...');
+      // console.log('[SW Manager] Registering Service Worker...');
       
       const registration = await navigator.serviceWorker.register('/sw.js', {
         scope: '/',
         updateViaCache: 'none' // Always check for updates
       });
 
-      console.log('[SW Manager] Service Worker registered successfully:', registration);
+      // console.log('[SW Manager] Service Worker registered successfully:', registration);
       
       this.status.isRegistered = true;
       this.status.version = registration.active?.scriptURL?.split('?')[0] || 'unknown';

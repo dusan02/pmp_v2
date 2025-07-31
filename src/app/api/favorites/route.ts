@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbHelpers, runTransaction } from '@/lib/database';
-import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getCurrentUser(request);
-    const userId = user?.id || 'default';
-
+    const userId = 'default';
     const favorites = dbHelpers.getUserFavorites.all(userId);
     
     return NextResponse.json({
@@ -27,8 +24,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { ticker } = await request.json();
-    const user = await getCurrentUser(request);
-    const userId = user?.id || 'default';
+    const userId = 'default';
 
     if (!ticker) {
       return NextResponse.json(
@@ -59,8 +55,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const ticker = searchParams.get('ticker');
-    const user = await getCurrentUser(request);
-    const userId = user?.id || 'default';
+    const userId = 'default';
 
     if (!ticker) {
       return NextResponse.json(

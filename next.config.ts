@@ -28,6 +28,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/ip3/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'google.com',
+        port: '',
+        pathname: '/s2/favicons/**',
+      },
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',

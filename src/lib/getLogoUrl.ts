@@ -200,6 +200,50 @@ const tickerDomains: Record<string, string> = {
   'BDX': 'bd.com',
   'OKE': 'oneok.com',
   'DDOG': 'datadoghq.com',
+  // New companies
+  'MSCI': 'msci.com',
+  'WST': 'westpharma.com',
+  'IDXX': 'idexx.com',
+  'FICO': 'fico.com',
+  'TER': 'teradyne.com',
+  'CTLT': 'catalent.com',
+  'CHD': 'churchdwight.com',
+  'ILMN': 'illumina.com',
+  'PAYC': 'paycom.com',
+  'CSGP': 'costar.com',
+  'MKTX': 'marketaxess.com',
+  'BKR': 'bakerhughes.com',
+  'FSLR': 'firstsolar.com',
+  'ENPH': 'enphase.com',
+  'GNRC': 'generac.com',
+  'BALL': 'ball.com',
+  'RMD': 'resmed.com',
+  'TDY': 'teledyne.com',
+  'STZ': 'cbrands.com',
+  'MLM': 'martinmarietta.com',
+  'VRSK': 'verisk.com',
+  'WAB': 'wabteccorp.com',
+  'ATO': 'atmosenergy.com',
+  'SNA': 'snapon.com',
+  'BRO': 'bbinsurance.com',
+  'ROK': 'rockwellautomation.com',
+  'KEYS': 'keysight.com',
+  'PTC': 'ptc.com',
+  'INVH': 'invitationhomes.com',
+  'AVB': 'avalonbay.com',
+  'ESS': 'essex.com',
+  'PEAK': 'healthpeak.com',
+  'MAA': 'maac.com',
+  'CPT': 'camdenliving.com',
+  'HES': 'hes.com',
+  'CF': 'cfindustries.com',
+  'MOS': 'mosaicco.com',
+  'NTRS': 'northerntrust.com',
+  'ZBRA': 'zebra.com',
+  'LHX': 'l3harris.com',
+  'BAX': 'baxter.com',
+  'CAH': 'cardinalhealth.com',
+  'HOLX': 'hologic.com',
   // International companies
   'TSM': 'tsmc.com', 'SAP': 'sap.com', 'ASML': 'asml.com', 'BABA': 'alibaba.com', 'TM': 'toyota.com',
   'AZN': 'astrazeneca.com', 'HSBC': 'hsbc.com', 'NVS': 'novartis.com', 'SHEL': 'shell.com',
@@ -216,7 +260,28 @@ const tickerDomains: Record<string, string> = {
   'AEM': 'agnicoeagle.com', 'DB': 'deutsche-bank.com', 'NU': 'nu.com', 'CNI': 'cn.ca',
   'DEO': 'diageo.com', 'NWG': 'natwestgroup.com', 'AMX': 'americamovil.com', 'MFC': 'manulife.com',
   'E': 'eni.com', 'WCN': 'wasteconnections.com', 'SU': 'suncor.com', 'TRP': 'tcenergy.com', 'PBR': 'petrobras.com',
-  'HMC': 'honda.com', 'GRMN': 'garmin.com', 'CCEP': 'coca-colaep.com', 'ALC': 'alcon.com', 'TAK': 'takeda.com'
+  'HMC': 'honda.com', 'GRMN': 'garmin.com', 'CCEP': 'coca-colaep.com', 'ALC': 'alcon.com', 'TAK': 'takeda.com',
+  // Additional tickers that were missing
+  'BIDU': 'baidu.com', 'STX': 'seagate.com', 'WBD': 'wbd.com', 'TME': 'tencent.com', 'EBAY': 'ebay.com'
+};
+
+// Local logo mapping for companies that have local logos
+const localLogos: Record<string, string> = {
+  'NVDA': '/logos/nvidia.svg',
+  'MSFT': '/logos/microsoft.svg',
+  'AAPL': '/logos/apple.svg',
+  'AMZN': '/logos/amazon.svg',
+  'GOOGL': '/logos/google.svg',
+  'GOOG': '/logos/google.svg',
+  'TSLA': '/logos/tesla.svg',
+  'META': '/logos/meta.svg',
+  'NFLX': '/logos/netflix.svg',
+  'AAPL': '/logos/apple.svg',
+  'MSFT': '/logos/microsoft.svg',
+  'GOOGL': '/logos/google.svg',
+  'AMZN': '/logos/amazon.svg',
+  'TSLA': '/logos/tesla.svg',
+  'NVDA': '/logos/nvidia.svg'
 };
 
 // Color mapping for consistent company colors
@@ -436,7 +501,19 @@ export const companyColors: Record<string, string> = {
   'AEM': '0066CC', 'DB': '0066CC', 'NU': '0066CC', 'CNI': '0066CC',
   'DEO': '0066CC', 'NWG': '0066CC', 'AMX': '0066CC', 'MFC': '0066CC',
   'E': '0066CC', 'WCN': '0066CC', 'SU': '0066CC', 'TRP': '0066CC', 'PBR': '0066CC',
-  'HMC': '0066CC', 'GRMN': '0066CC', 'CCEP': '0066CC', 'ALC': '0066CC', 'TAK': '0066CC'
+  'HMC': '0066CC', 'GRMN': '0066CC', 'CCEP': '0066CC', 'ALC': '0066CC', 'TAK': '0066CC',
+  // New companies colors
+  'MSCI': '0066CC', 'WST': '0066CC', 'IDXX': '0066CC', 'FICO': '0066CC', 'TER': '0066CC',
+  'CTLT': '0066CC', 'CHD': '0066CC', 'ILMN': '00A3E0', 'PAYC': '0066CC', 'CSGP': '0066CC',
+  'MKTX': '0066CC', 'BKR': '0066CC', 'FSLR': 'FF6600', 'ENPH': '0066CC', 'GNRC': '0066CC',
+  'BALL': '0066CC', 'RMD': '0066CC', 'TDY': '0066CC', 'STZ': '1E3A8A', 'MLM': '0066CC',
+  'VRSK': '0066CC', 'WAB': '0066CC', 'ATO': '0066CC', 'SNA': '0066CC', 'BRO': '0066CC',
+  'ROK': '0066CC', 'KEYS': '0066CC', 'PTC': '0066CC', 'INVH': '0066CC', 'AVB': '0066CC',
+  'ESS': '0066CC', 'PEAK': '0066CC', 'MAA': '0066CC', 'CPT': '0066CC', 'HES': '0066CC',
+  'CF': '0066CC', 'MOS': '0066CC', 'NTRS': '0066CC', 'ZBRA': '0066CC', 'LHX': '0066CC',
+  'BAX': '0066CC', 'CAH': '0066CC', 'HOLX': '0066CC',
+  // Additional tickers colors
+  'BIDU': '0066CC', 'STX': '0066CC', 'WBD': '0066CC', 'TME': '0066CC', 'EBAY': '0066CC'
 };
 
 export function getLogoUrl(ticker: string): string {
@@ -452,13 +529,15 @@ export function getLogoUrl(ticker: string): string {
   const logoSources = [
     // Primary: Clearbit (most reliable for real logos)
     `https://logo.clearbit.com/${domain}?size=32`,
-    // Fallback: Google Favicon (works for most companies)
+    // Fallback 1: Local logo if available
+    localLogos[ticker] || null,
+    // Fallback 2: Google Favicon (works for most companies)
     `https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
-    // Secondary: DuckDuckGo favicon
+    // Fallback 3: DuckDuckGo favicon
     `https://icons.duckduckgo.com/ip3/${domain}.ico`,
     // Last resort: ui-avatars with company colors
     `https://ui-avatars.com/api/?name=${ticker}&background=${companyColors[ticker] || '0066CC'}&size=32&color=fff&font-size=0.4&bold=true&format=png`
-  ];
+  ].filter(Boolean); // Remove null values
   
   // Return the first source (Clearbit) - fallback logic is in the component
   return logoSources[0];

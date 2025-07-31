@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 
-export type SortKey = "ticker" | "marketCap" | "preMarketPrice" | "percentChange" | "marketCapDiff";
+export type SortKey = "ticker" | "currentMarketCap" | "preMarketPrice" | "percentChange" | "marketCapDiff";
 
 export function useSortableData<T extends Record<string, any>>(items: T[], initKey: SortKey, initAsc = false) {
   const [sortKey, setSortKey] = useState<SortKey>(initKey);

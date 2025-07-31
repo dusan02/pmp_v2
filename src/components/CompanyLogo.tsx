@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { getDomain, companyColors } from '@/lib/getLogoUrl';
 
 interface CompanyLogoProps {
@@ -9,6 +9,25 @@ interface CompanyLogoProps {
   className?: string;
   priority?: boolean;
 }
+
+// Cache for successful logo URLs to avoid repeated requests
+const logoCache = new Map<string, string>();
+
+// Local logo mapping for companies that have local logos
+const localLogos: Record<string, string> = {
+  'NVDA': '/logos/nvidia.svg',
+  'MSFT': '/logos/microsoft.svg',
+  'AAPL': '/logos/apple.svg',
+  'AMZN': '/logos/amazon.svg',
+  'GOOGL': '/logos/google.svg',
+  'GOOG': '/logos/google.svg',
+  'TSLA': '/logos/tesla.svg',
+  'META': '/logos/meta.svg',
+  'NFLX': '/logos/netflix.svg',
+  'MSCI': '/logos/msci.svg',
+  'ILMN': '/logos/illumina.svg',
+  'STZ': '/logos/constellation.svg'
+};
 
 export default function CompanyLogo({
   ticker,
@@ -20,62 +39,76 @@ export default function CompanyLogo({
   const [src, setSrc] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Get all possible logo sources
-  const getLogoSources = (ticker: string) => {
+  // Get optimized logo sources with caching
+  const getLogoSources = useMemo(() => {
+    // Check cache first
+    const cachedUrl = logoCache.get(ticker);
+    if (cachedUrl) {
+      return [cachedUrl];
+    }
+
     // Use the centralized domain mapping from getLogoUrl.ts
-    let domain: string;
+    let domain: string | null = null;
     try {
       domain = getDomain(ticker);
     } catch (error) {
-      // If no domain mapping exists, return only ui-avatars
-      const color = companyColors[ticker] || '0066CC';
-      return [
-        `https://ui-avatars.com/api/?name=${ticker}&background=${color}&size=${size}&color=fff&font-size=0.4&bold=true&format=png`
-      ];
+      // If no domain mapping exists, fallback to initials
+      console.log(`No domain mapping found for ticker: ${ticker}, using fallback`);
+      return [];
     }
     
     return [
-      // Primary: Clearbit (real company logos)
+      // Primary: Clearbit Logo API (most reliable for real logos)
       `https://logo.clearbit.com/${domain}?size=${size}`,
-      // Fallback: Google Favicon (works for most companies)
+      // Fallback 1: Local logo if available
+      localLogos[ticker] || null,
+      // Fallback 2: Google Favicon (works for most companies)
       `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`,
-      // Secondary: DuckDuckGo favicon
-      `https://icons.duckduckgo.com/ip3/${domain}.ico`,
-      // Last resort: ui-avatars with company colors
-      `https://ui-avatars.com/api/?name=${ticker}&background=${companyColors[ticker] || '0066CC'}&size=${size}&color=fff&font-size=0.4&bold=true&format=png`
-    ];
-  };
+      // Fallback 3: DuckDuckGo favicon
+      `https://icons.duckduckgo.com/ip3/${domain}.ico`
+      // No ui-avatars.com!
+    ].filter(Boolean); // Remove null values
+  }, [ticker, size]);
 
   useEffect(() => {
-    const logoSources = getLogoSources(ticker);
+    const logoSources = getLogoSources;
+    
+    // If we have a cached URL, use it directly
+    if (logoSources.length === 1 && logoCache.has(ticker)) {
+      setSrc(logoSources[0]);
+      setIsLoading(false);
+      return;
+    }
+    
     setCurrentIndex(0);
-    setSrc(logoSources[0]);
+    setSrc(logoSources[0] || null);
     setIsLoading(true);
-  }, [ticker, size]);
+  }, [ticker, size, getLogoSources]);
 
   useEffect(() => {
     if (!src || src === '') return;
 
-    const logoSources = getLogoSources(ticker);
-    const img = new Image();
+    const logoSources = getLogoSources;
+    const img = new window.Image();
     img.src = src;
 
     const handleLoad = () => {
       setIsLoading(false);
-      console.log(`✅ Logo loaded successfully for ${ticker}: ${src}`);
+      // Cache successful URLs (only cache real logos, not fallbacks)
+      if (src && !src.includes('duckduckgo.com')) {
+        logoCache.set(ticker, src);
+      }
     };
 
     const handleError = () => {
-      console.log(`❌ Logo failed for ${ticker}: ${src} (${currentIndex + 1}/${logoSources.length})`);
-      
       if (currentIndex < logoSources.length - 1) {
         const nextIndex = currentIndex + 1;
         setCurrentIndex(nextIndex);
         setSrc(logoSources[nextIndex]);
       } else {
-        // All sources failed, stay on the last one (ui-avatars)
+        // All sources failed, fallback to initials
+        setSrc(null);
         setIsLoading(false);
-        console.warn(`⚠️ All logo sources failed for ${ticker}. Using fallback avatar.`);
       }
     };
 
@@ -86,9 +119,9 @@ export default function CompanyLogo({
       img.onload = null;
       img.onerror = null;
     };
-  }, [src, currentIndex, ticker, size]);
+  }, [src, currentIndex, ticker, getLogoSources]);
 
-  // Don't render img if src is null or empty
+  // Fallback: render initials if no logo is available
   if (!src || src === '') {
     return (
       <div 
@@ -96,10 +129,14 @@ export default function CompanyLogo({
         style={{ 
           width: size, 
           height: size,
-          opacity: 0.5
+          opacity: 0.8,
+          fontWeight: 'bold',
+          fontSize: size * 0.5,
+          color: '#666',
+          userSelect: 'none',
         }}
       >
-        <span className="text-xs font-bold text-gray-500">{ticker}</span>
+        {ticker}
       </div>
     );
   }

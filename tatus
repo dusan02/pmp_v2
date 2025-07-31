@@ -134,3 +134,23 @@
   -D xx_c_o_l_o_r  .  --color=xx_c_o_l_o_r
                   Set screen colors.
   -e  -E  ....  --quit-at-eof  --QUIT-AT-EOF
+[33m935d773[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m Fáza 4-a
+[33m78d6dff[m Migrácia projektu do nového repozitára
+[33m570c651[m Fix: Obnovenie .env.local, čistá inštalácia balíčkov, aplikácia plne funkčná na porte 3002
+[33ma190606[m Fix: Update port to 3002 in package.json and restore API functionality
+[33mea0ecce[m Merge: Resolve conflicts and update to latest working version
+[33m826debe[m Update: UI improvements and API fixes - Refactored MarketIndicators component - Removed MarketIndicators from main page - Rearranged header layout (text left, buttons right) - Standardized all header buttons - Made Export CSV button green - Fixed API integration with Polygon.io
+[33m7e227bd[m Fix blurry logos with robust fallback system - Implement custom fallback logic using useEffect + Image API - Replace Next.js Image with native img tag for better error handling - Add detailed logging for logo loading success/failure - Fix domain mappings for BAC, MFG and other problematic tickers - Add trading hours info to UI and README - Update README with comprehensive documentation
+[33mb7127ee[m CDN optimization and cache improvements - working version
+[33m6b7530f[m Implement API Rate Limiting & Security - Add comprehensive security middleware with rate limiting - Add API key validation for protected endpoints - Add CORS configuration and security headers - Add DDoS protection and suspicious activity detection - Add security monitoring panel at /security - Add security events API with filtering and statistics
+[33m2244689[m Implement Background Data Service with admin panel and fix button spacing - Add automatic data updates every 5 minutes - Add admin panel at /admin for service monitoring - Add API endpoints for background service control - Fix inconsistent button spacing in header - Integrate background service status indicator
+[33mc78fc05[m Fix button heights and font sizes - make all buttons consistent (48px height, 1rem font size)
+[33m760d70d[m Implement complete user authentication system - Add user registration, login, logout with session management - Create AuthModal component with modern UI - Add auth API endpoints (/api/auth/register, /api/auth/login, /api/auth/logout, /api/auth/me) - Update favorites to use authenticated user - Add responsive auth UI in header - Implement secure password hashing and JWT sessions
+[33ma66474d[m Implement Database Layer with SQLite - Add persistent storage for stocks, price history, and user favorites
+[33maadc86f[m Fix duplicate tickers causing React key errors - removed 10 duplicate tickers from international section
+[33m666c0d2[m Fix logo display issues and add BRK-B ticker - Fixed duplicate logos for DB and BAC - Added BRK-B to ticker list with proper data - Updated logo domains for better fetching - Fixed Market Cap column alignment - Added debug logs for troubleshooting
+[33m5633466[m Add Company Name column, fix logo loading, improve alignment, remove BRK-B
+[33m9207906[m Fix Tailwind CSS PostCSS plugin and restore 201 companies functionality - Fixed @tailwindcss/postcss configuration - Replaced BRK-B with BRK.A for better API compatibility - Added BRK.B to reach 201 companies - Updated company names and share counts - Restored functional cache system with real-time data
+[33mf5633e4[m Update button styling: equal sizes, Excel theme for CSV export
+[33mcddaf7d[m Add search functionality and improve UI layout - Added search filter for companies by ticker and name - Moved search input next to 'All Stocks' heading - Improved placeholder styling with softer gray color - Added sticky header for better navigation - Enhanced mobile responsiveness
+[33m9818ff5[m Implement cache system for 200 companies - Background updates every 15min, instant loading, manual refresh API

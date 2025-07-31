@@ -67,10 +67,7 @@ export function middleware(request: NextRequest) {
   // Rate limiting for different endpoints
   let rateLimitPassed = true;
   
-  if (pathname.startsWith('/api/auth/')) {
-    // Auth endpoints: 5 requests per 15 minutes
-    rateLimitPassed = checkRateLimit(ip, 5, 15 * 60 * 1000);
-  } else if (pathname.startsWith('/api/background/')) {
+  if (pathname.startsWith('/api/background/')) {
     // Background service endpoints: 10 requests per minute
     rateLimitPassed = checkRateLimit(ip, 10, 60 * 1000);
   } else if (pathname.startsWith('/api/')) {

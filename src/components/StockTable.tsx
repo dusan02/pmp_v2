@@ -3,6 +3,15 @@
 import { Star } from 'lucide-react';
 
 export default function StockTable({ stocks, favorites, toggleFavorite }: any) {
+  // Add null check to prevent map error
+  if (!stocks || !Array.isArray(stocks)) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
+        <p className="text-gray-500 dark:text-gray-400">No stock data available</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
